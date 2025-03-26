@@ -1,86 +1,127 @@
 #include <stdio.h>
 
-// Definindo o tamanho do tabuleiro e o tamanho dos navios
 #define TAMANHO_TABULEIRO 10
-#define TAMANHO_NAVIO 3
+#define TAMANHO_HABILIDADE 5  // Tamanho das matrizes de habilidade (5x5)
+
+#define CONE 1
+#define CRUZ 2
+#define OCTAEDRO 3
 
 // Função para exibir o tabuleiro
 void exibirTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
     printf("Tabuleiro:\n");
     for (int i = 0; i < TAMANHO_TABULEIRO; i++) {
         for (int j = 0; j < TAMANHO_TABULEIRO; j++) {
-            printf("%d ", tabuleiro[i][j]);
+            if (tabuleiro[i][j] == 0) {
+                printf("0 ");  // Água
+            } else if (tabuleiro[i][j] == 3) {
+                printf("3 ");  // Navio
+            } else if (tabuleiro[i][j] == 5) {
+                printf("5 ");  // Área de Efeito
+            }
         }
         printf("\n");
     }
 }
 
-// Função para posicionar um navio horizontalmente
-int posicionarNavioHorizontal(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int linha, int coluna) {
-    // Verificar se o navio cabe na linha sem ultrapassar os limites do tabuleiro
-    if (coluna + TAMANHO_NAVIO > TAMANHO_TABULEIRO) {
-        printf("Erro: Navio horizontal fora dos limites do tabuleiro.\n");
-        return 0;
-    }
+// Função para aplicar a área de efeito do Cone
+void aplicarHabilidadeCone(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int linha, int coluna) {
+    // A habilidade do Cone se expande de cima para baixo
+    int cone[TAMANHO_HABILIDADE][TAMANHO_HABILIDADE] = {
+        {0, 0, 1, 0, 0},
+        {0, 1, 1, 1, 0},
+        {1, 1, 1, 1, 1},
+        {0, 1, 1, 1, 0},
+        {0, 0, 1, 0, 0}
+    };
 
-    // Verificar se há sobreposição com outro navio
-    for (int i = coluna; i < coluna + TAMANHO_NAVIO; i++) {
-        if (tabuleiro[linha][i] == 3) {
-            printf("Erro: Sobreposição de navios detectada.\n");
-            return 0;
+    // Aplicando a habilidade no tabuleiro, centrando na posição dada
+    for (int i = 0; i < TAMANHO_HABILIDADE; i++) {
+        for (int j = 0; j < TAMANHO_HABILIDADE; j++) {
+            if (cone[i][j] == 1) {
+                int novaLinha = linha + i - 2;  // Ajuste para centrar a habilidade
+                int novaColuna = coluna + j - 2; // Ajuste para centrar a habilidade
+                if (novaLinha >= 0 && novaLinha < TAMANHO_TABULEIRO && novaColuna >= 0 && novaColuna < TAMANHO_TABULEIRO) {
+                    tabuleiro[novaLinha][novaColuna] = 5;  // Marca a área de efeito
+                }
+            }
         }
     }
-
-    // Posicionar o navio
-    for (int i = coluna; i < coluna + TAMANHO_NAVIO; i++) {
-        tabuleiro[linha][i] = 3;
-    }
-
-    return 1;
 }
 
-// Função para posicionar um navio verticalmente
-int posicionarNavioVertical(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int linha, int coluna) {
-    // Verificar se o navio cabe na coluna sem ultrapassar os limites do tabuleiro
-    if (linha + TAMANHO_NAVIO > TAMANHO_TABULEIRO) {
-        printf("Erro: Navio vertical fora dos limites do tabuleiro.\n");
-        return 0;
-    }
+// Função para aplicar a área de efeito da Cruz
+void aplicarHabilidadeCruz(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int linha, int coluna) {
+    // A habilidade Cruz afeta as células acima, abaixo, à esquerda e à direita do centro
+    int cruz[TAMANHO_HABILIDADE][TAMANHO_HABILIDADE] = {
+        {0, 0, 1, 0, 0},
+        {0, 1, 1, 1, 0},
+        {1, 1, 1, 1, 1},
+        {0, 1, 1, 1, 0},
+        {0, 0, 1, 0, 0}
+    };
 
-    // Verificar se há sobreposição com outro navio
-    for (int i = linha; i < linha + TAMANHO_NAVIO; i++) {
-        if (tabuleiro[i][coluna] == 3) {
-            printf("Erro: Sobreposição de navios detectada.\n");
-            return 0;
+    // Aplicando a habilidade no tabuleiro, centrando na posição dada
+    for (int i = 0; i < TAMANHO_HABILIDADE; i++) {
+        for (int j = 0; j < TAMANHO_HABILIDADE; j++) {
+            if (cruz[i][j] == 1) {
+                int novaLinha = linha + i - 2;  // Ajuste para centrar a habilidade
+                int novaColuna = coluna + j - 2; // Ajuste para centrar a habilidade
+                if (novaLinha >= 0 && novaLinha < TAMANHO_TABULEIRO && novaColuna >= 0 && novaColuna < TAMANHO_TABULEIRO) {
+                    tabuleiro[novaLinha][novaColuna] = 5;  // Marca a área de efeito
+                }
+            }
         }
     }
+}
 
-    // Posicionar o navio
-    for (int i = linha; i < linha + TAMANHO_NAVIO; i++) {
-        tabuleiro[i][coluna] = 3;
+// Função para aplicar a área de efeito do Octaedro
+void aplicarHabilidadeOctaedro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int linha, int coluna) {
+    // A habilidade Octaedro se expande em forma de losango
+    int octaedro[TAMANHO_HABILIDADE][TAMANHO_HABILIDADE] = {
+        {0, 0, 1, 0, 0},
+        {0, 1, 1, 1, 0},
+        {1, 1, 1, 1, 1},
+        {0, 1, 1, 1, 0},
+        {0, 0, 1, 0, 0}
+    };
+
+    // Aplicando a habilidade no tabuleiro, centrando na posição dada
+    for (int i = 0; i < TAMANHO_HABILIDADE; i++) {
+        for (int j = 0; j < TAMANHO_HABILIDADE; j++) {
+            if (octaedro[i][j] == 1) {
+                int novaLinha = linha + i - 2;  // Ajuste para centrar a habilidade
+                int novaColuna = coluna + j - 2; // Ajuste para centrar a habilidade
+                if (novaLinha >= 0 && novaLinha < TAMANHO_TABULEIRO && novaColuna >= 0 && novaColuna < TAMANHO_TABULEIRO) {
+                    tabuleiro[novaLinha][novaColuna] = 5;  // Marca a área de efeito
+                }
+            }
+        }
     }
-
-    return 1;
 }
 
 int main() {
-    // Inicializando o tabuleiro com 0 (água)
+    // Inicializando o tabuleiro com 0 (água) e colocando 3 para os navios
     int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO] = {0};
 
-    // Definindo as coordenadas iniciais para os navios
-    int linhaNavioHorizontal = 2, colunaNavioHorizontal = 3;  // Navio horizontal
-    int linhaNavioVertical = 5, colunaNavioVertical = 6;      // Navio vertical
+    // Definindo as posições dos navios (coordenadas fixas)
+    tabuleiro[2][3] = 3;  // Navio horizontal
+    tabuleiro[3][3] = 3;
+    tabuleiro[4][3] = 3;
+    tabuleiro[5][6] = 3;  // Navio vertical
+    tabuleiro[6][6] = 3;
+    tabuleiro[7][6] = 3;
 
-    // Posicionando os navios no tabuleiro
-    if (!posicionarNavioHorizontal(tabuleiro, linhaNavioHorizontal, colunaNavioHorizontal)) {
-        return 1;  // Erro ao posicionar navio horizontal
-    }
+    // Definindo o ponto de origem para as habilidades (centro de cada habilidade)
+    int linhaCone = 3, colunaCone = 3;
+    int linhaCruz = 6, colunaCruz = 6;
+    int linhaOctaedro = 4, colunaOctaedro = 4;
 
-    if (!posicionarNavioVertical(tabuleiro, linhaNavioVertical, colunaNavioVertical)) {
-        return 1;  // Erro ao posicionar navio vertical
-    }
+    // Aplicando as habilidades no tabuleiro
+    aplicarHabilidadeCone(tabuleiro, linhaCone, colunaCone);
+    aplicarHabilidadeCruz(tabuleiro, linhaCruz, colunaCruz);
+    aplicarHabilidadeOctaedro(tabuleiro, linhaOctaedro, colunaOctaedro);
 
-    // Exibindo o tabuleiro com os navios posicionados
+    // Exibindo o tabuleiro após aplicar as habilidades
     exibirTabuleiro(tabuleiro);
 
     return 0;
